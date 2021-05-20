@@ -7,6 +7,8 @@ import particleFragment from './shaders/particle.frag';
 import velocityFragment from './shaders/velocity.frag';
 import positionFragment from './shaders/position.frag';
 
+import store from '../store';
+
 export default class PingPong {
   constructor(renderer, camera, scene, opts = {}) {
     this.size = opts.size || 512;
@@ -39,6 +41,9 @@ export default class PingPong {
     this.gpuCompute.setVariableDependencies(this.positionVariable, [this.velocityVariable, this.positionVariable]);
     
     // Add custom uniforms
+    this.positionVariable.material.uniforms.uTime = { value: 0 };
+    this.positionVariable.material.uniforms.uResolution = { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) };
+
     this.velocityVariable.material.uniforms.uTime = { value: 0 };
 
     // Check for completeness
@@ -48,12 +53,14 @@ export default class PingPong {
     }    
   }
 
-  render() {
+  render(time) {
     // Compute
     this.gpuCompute.compute();
     
     // Update texture uniforms in your visualization materials with the gpu renderer output
-    // myMaterial.uniforms.myTexture.value = this.gpuCompute.getCurrentRenderTarget(this.positionVariable).texture; // ??
+    this.points.material.uniforms.tPosition.value = this.gpuCompute.getCurrentRenderTarget(this.positionVariable).texture;
+
+    this.positionVariable.material.uniforms.uTime.value = time;
     
     // Rendering
     this.renderer.render(this.scene, this.camera);    
@@ -96,6 +103,7 @@ export default class PingPong {
       fragmentShader: particleFragment,
       uniforms: {
         uTime: { value: 0 },
+        tPosition: { value: null },
       },
     });
 
@@ -117,6 +125,6 @@ export default class PingPong {
 
     this.points = new THREE.Points(geometry, material);
 
-    this.scene.add(points);
+    this.scene.add(this.points);
   }
 }

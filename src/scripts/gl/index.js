@@ -15,7 +15,7 @@ export default new class {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(store.bounds.ww, store.bounds.wh);
-    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.setClearColor(0x000000, 1);
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -23,7 +23,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 5);
+    this.camera.position.set(0, 0, 10);
 
     this.scene = new THREE.Scene();
 
@@ -71,7 +71,7 @@ export default new class {
   render() {
     this.controls.update();
 
-    this.pingpong.render();
+    this.pingpong.render(this.clock.getElapsedTime());
 
     this.renderer.render(this.scene, this.camera);
   }
