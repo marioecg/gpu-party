@@ -14,7 +14,7 @@ import particlesFragment from './shaders/particles.frag';
 
 export default new class {
   constructor() {
-    this.renderer = new THREE.WebGLRenderer({ 
+    this.renderer = new THREE.WebGL1Renderer({ 
       antialias: true, 
       alpha: true, 
     });
@@ -62,8 +62,8 @@ export default new class {
 
   createFBO() {
     // width and height of the FBO
-    const width = 256;
-    const height = 256;
+    const width = 512;
+    const height = 512;
 
     // Populate a Float32Array of random positions
     let length = width * height * 3;
@@ -84,6 +84,7 @@ export default new class {
       fragmentShader: simFragment,
       uniforms: {
         positions: { value: positions },
+        uTime: { value: 0 },
       },
     });
 
@@ -121,7 +122,7 @@ export default new class {
 
     this.time = this.clock.getElapsedTime();
 
-    // this.fbo.update();
+    this.fbo.update(this.time);
 
     this.renderer.render(this.scene, this.camera);
   }

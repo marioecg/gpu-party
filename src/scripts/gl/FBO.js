@@ -78,8 +78,8 @@ export default class FBO {
       2
     ));
 
-    const mesh = new THREE.Mesh(geometry, this.simulationMaterial);
-    this.scene.add(mesh);        
+    this.mesh = new THREE.Mesh(geometry, this.simulationMaterial);
+    this.scene.add(this.mesh);        
   }
 
   createParticles() {
@@ -98,9 +98,11 @@ export default class FBO {
     
     // The renderMaterial is used to render the particles
     this.particles = new THREE.Points(geometry, this.renderMaterial);    
+
+    console.log(this.simulationMaterial.uniforms.uTime.value);
   }
 
-  update() {
+  update(time) {
     // Update the simulation and render the result in a target texture
     this.renderer.setRenderTarget(this.rtt);
     this.renderer.clear();
@@ -108,6 +110,8 @@ export default class FBO {
     this.renderer.setRenderTarget(null);
     
     // Use the result of the swap as the new position for the particles' renderer
-    this.particles.material.uniforms.positions.value = this.rtt;    
+    this.particles.material.uniforms.positions.value = this.rtt.texture;    
+
+    this.simulationMaterial.uniforms.uTime.value = time;
   }
 }
