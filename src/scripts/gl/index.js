@@ -1,11 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import PingPong from './PingPong';
-
 import { Events } from '../events';
 
 import store from '../store';
+
+import FBO from './FBO';
+
+import simVertex from './shaders/simulation.vert';
+import simFragment from './shaders/simulation.frag';
+import particlesVertex from './shaders/particles.vert';
+import particlesFragment from './shaders/particles.frag';
 
 export default new class {
   constructor() {
@@ -23,7 +28,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 10);
+    this.camera.position.set(0, 0, 3);
 
     this.scene = new THREE.Scene();
 
@@ -33,6 +38,7 @@ export default new class {
     this.controls.enableDamping = true;
 
     this.clock = new THREE.Clock();
+    this.time = null;
 
     this.init();
   }
@@ -40,7 +46,7 @@ export default new class {
   init() {
     this.addCanvas();
     this.addEvents();
-    this.addElements();
+    this.createFBO();
   }
 
   addCanvas() {
@@ -54,8 +60,50 @@ export default new class {
     Events.on('resize', this.resize.bind(this));
   }
 
-  addElements() {
-    this.pingpong = new PingPong(this.renderer, this.camera, this.scene, { size: 64 });
+  createFBO() {
+    // width and height of the FBO
+    const width = 256;
+    const height = 256;
+
+    // Populate a Float32Array of random positions
+    let length = width * height * 3;
+    let data = new Float32Array(length);
+    for (let i = 0; i < length; i += 3) {
+      data[i + 0] = Math.random() - 0.5;
+      data[i + 1] = Math.random() - 0.5;
+      data[i + 2] = Math.random() - 0.5;
+    }
+
+    // Convert the data to a FloatTexture
+    const positions = new THREE.DataTexture(data, width, height, THREE.RGBFormat, THREE.FloatType);
+    positions.needsUpdate = true;
+
+    // Simulation shader material used to update the particles' positions
+    const simMaterial = new THREE.ShaderMaterial({
+      vertexShader: simVertex,
+      fragmentShader: simFragment,
+      uniforms: {
+        positions: { value: positions },
+      },
+    });
+
+    // Render shader material to display the particles on screen
+    // the positions uniform will be set after the fbo.update() call
+    const renderMaterial = new THREE.ShaderMaterial({
+      vertexShader: particlesVertex,
+      fragmentShader: particlesFragment,
+      uniforms: {
+        positions: { value: null },
+        uTime: { value: 0 },
+        uPointSize: { value: 2 },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending
+    });
+
+    // Initialize the FBO
+    this.fbo = new FBO(width, height, this.renderer, simMaterial, renderMaterial);
+    this.scene.add(this.fbo.particles);
   }
 
   resize() {
@@ -71,7 +119,9 @@ export default new class {
   render() {
     this.controls.update();
 
-    this.pingpong.render(this.clock.getElapsedTime());
+    this.time = this.clock.getElapsedTime();
+
+    // this.fbo.update();
 
     this.renderer.render(this.scene, this.camera);
   }
