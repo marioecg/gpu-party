@@ -9,8 +9,6 @@ export default class FBO {
     this.renderMaterial = renderMaterial;
 
     this.gl = this.renderer.getContext();
-    
-    this.lastRenderTarget = null;
 
     this.init();
   }
@@ -104,11 +102,10 @@ export default class FBO {
 
   update() {
     // Update the simulation and render the result in a target texture
-    this.lastRenderTarget = this.renderer.renderTarget;
     this.renderer.setRenderTarget(this.rtt);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
-    this.renderer.setRenderTarget(this.lastRenderTarget == null ? null : this.lastRenderTarget);
+    this.renderer.setRenderTarget(null);
     
     // Use the result of the swap as the new position for the particles' renderer
     this.particles.material.uniforms.positions.value = this.rtt;    
