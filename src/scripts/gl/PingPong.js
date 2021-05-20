@@ -100,18 +100,22 @@ export default class PingPong {
     });
 
     // Populate particles
-    let particles = 1000;
+    let particles = this.size * this.size;
     let position = new Float32Array(particles * 3);
 
-    for (let i = 0; i < particles; i++) {
-      position[i + 0] = Math.random() - 0.5;
-      position[i + 1] = Math.random() - 0.5;
-      position[i + 2] = Math.random() - 0.5;
+    for (let i = 0, j = 0; i < particles * 3; i += 3, j++) {
+      position[i + 0] = (j % this.size) / this.size;
+      position[i + 1] = ((j / this.size) | 0) / this.size;
+      position[i + 2] = 0;
+
+      // position[i + 0] = Math.random() - 0.5;
+      // position[i + 1] = Math.random() - 0.5;
+      // position[i + 2] = Math.random() - 0.5;      
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(position, 3));
 
-    const points = new THREE.Points(geometry, material);
+    this.points = new THREE.Points(geometry, material);
 
     this.scene.add(points);
   }
