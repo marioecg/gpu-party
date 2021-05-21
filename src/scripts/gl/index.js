@@ -12,6 +12,8 @@ import simFragment from './shaders/simulation.frag';
 import particlesVertex from './shaders/particles.vert';
 import particlesFragment from './shaders/particles.frag';
 
+import { getRandomSpherePoint } from '../utils';
+
 export default new class {
   constructor() {
     this.renderer = new THREE.WebGL1Renderer({ 
@@ -20,7 +22,7 @@ export default new class {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(store.bounds.ww, store.bounds.wh);
-    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.setClearColor(0x000000, 0);
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -28,7 +30,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 5);
+    this.camera.position.set(0, 0, 3.5);
 
     this.scene = new THREE.Scene();
 
@@ -69,9 +71,18 @@ export default new class {
     let length = width * height * 3;
     let data = new Float32Array(length);
     for (let i = 0; i < length; i += 3) {
-      data[i + 0] = Math.random() - 0.5;
-      data[i + 1] = Math.random() - 0.5;
-      data[i + 2] = Math.random() - 0.5;
+      // // Replaced by this if you want 
+      // // random positions inside a cube
+      // data[i + 0] = Math.random() - 0.5;
+      // data[i + 1] = Math.random() - 0.5;
+      // data[i + 2] = Math.random() - 0.5;
+
+      // Random positions inside a sphere
+      const point = getRandomSpherePoint();
+      
+      data[i + 0] = point.x;
+      data[i + 1] = point.y;
+      data[i + 2] = point.z;      
     }
 
     // Convert the data to a FloatTexture
