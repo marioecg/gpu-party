@@ -98,8 +98,6 @@ export default class FBO {
     
     // The renderMaterial is used to render the particles
     this.particles = new THREE.Points(geometry, this.renderMaterial);    
-
-    console.log(this.simulationMaterial.uniforms.uTime.value);
   }
 
   update(time) {

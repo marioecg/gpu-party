@@ -6,8 +6,10 @@ void main() {
   vec3 pos = texture2D(positions, position.xy).xyz; // pos now contains a 3D position in space, we can use it as a regular vertex
 
   // Regular projection of our position
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
  
   // Sets the point size
+  // gl_PointSize = 1.0 / -mvPosition.z;
   gl_PointSize = uPointSize;
 }
