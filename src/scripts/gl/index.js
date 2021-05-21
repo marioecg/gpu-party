@@ -71,7 +71,7 @@ export default new class {
     let length = width * height * 3;
     let data = new Float32Array(length);
     for (let i = 0; i < length; i += 3) {
-      // // Replaced by this if you want 
+      // // Replaced with this if you want 
       // // random positions inside a cube
       // data[i + 0] = Math.random() - 0.5;
       // data[i + 1] = Math.random() - 0.5;
