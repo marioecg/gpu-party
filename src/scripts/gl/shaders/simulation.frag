@@ -5,6 +5,8 @@ varying vec2 vUv;
 
 #define PI 3.1415926538
 
+#pragma glslify: curl = require(glsl-curl-noise)
+
 mat4 rotation3d(vec3 axis, float angle) {
   axis = normalize(axis);
   float s = sin(angle);
@@ -26,12 +28,13 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 void main() {
   // Basic simulation: displays the particles in place.
   vec3 pos = texture2D(positions, vUv).rgb;
-  float t = uTime * 0.5;
+  float t = uTime * 0.1;
 
   // We can move the particle here
-  pos = rotate(pos, vec3(0.0, 0.0, 1.0), t + sin(length(pos.xy) * 2.0 + PI * 0.5) * 10.0);
-  // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
-  pos.z += tan(length(length(pos.xy) * 10.0) - uTime) * 1.0;
+  // pos = rotate(pos, vec3(0.0, 0.0, 1.0), t + sin(length(pos.xy) * 2.0 + PI * 0.5) * 10.0);
+  // // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
+  // pos.z += tan(length(length(pos.xy) * 10.0) - uTime) * 1.0;
+  pos += curl(pos + t);
   
   gl_FragColor = vec4(pos, 1.0);
 }
