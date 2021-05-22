@@ -11,6 +11,8 @@ import simVertex from './shaders/simulation.vert';
 import simFragment from './shaders/simulation.frag';
 import particlesVertex from './shaders/particles.vert';
 import particlesFragment from './shaders/particles.frag';
+import fullScreenVertex from './shaders/fullscreen.vert';
+import fullScreenFragment from './shaders/fullscreen.frag';
 
 import { getRandomSpherePoint } from '../utils';
 
@@ -52,6 +54,7 @@ export default new class {
     this.addEvents();
     this.setGui();
     this.createFBO();
+    this.createScreenQuad();
   }
 
   addCanvas() {
@@ -70,6 +73,7 @@ export default new class {
       pointSize: 1.2,
       speed: 0.5,
       curlFreq: 0.25,
+      opacity: 0.35,
     };
 
     GUI.add(this.tweaks, 'pointSize', 1, 3, 0.1)
@@ -82,6 +86,9 @@ export default new class {
     GUI.add(this.tweaks, 'curlFreq', 0, 0.6, 0.01)
        .name('noise frequency')
        .onChange(() => this.simMaterial.uniforms.uCurlFreq.value = this.tweaks.curlFreq);
+
+    GUI.add(this.tweaks, 'opacity', 0.1, 1.0, 0.01)
+       .onChange(() => this.renderMaterial.uniforms.uOpacity.value = this.tweaks.opacity);
   }
 
   createFBO() {
@@ -131,6 +138,7 @@ export default new class {
         positions: { value: null },
         uTime: { value: 0 },
         uPointSize: { value: this.tweaks.pointSize },
+        uOpacity: { value: this.tweaks.opacity },
       },
       transparent: true,
       blending: THREE.AdditiveBlending
@@ -142,6 +150,23 @@ export default new class {
     this.scene.add(this.fbo.particles);
   }
 
+  createScreenQuad() {
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const material = new THREE.ShaderMaterial({
+      vertexShader: fullScreenVertex,
+      fragmentShader: fullScreenFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
+      },
+      depthTest: false,
+      blending: THREE.AdditiveBlending      
+    });
+
+    this.fullScreenQuad = new THREE.Mesh(geometry, material);
+    this.scene.add(this.fullScreenQuad);
+  }
+
   resize() {
     let width = store.bounds.ww;
     let height = store.bounds.wh;
@@ -150,6 +175,9 @@ export default new class {
     this.renderer.setSize(width, height);
 
     this.camera.updateProjectionMatrix();
+
+    this.fullScreenQuad.material.uniforms.uResolution.value.x = store.bounds.ww;
+    this.fullScreenQuad.material.uniforms.uResolution.value.y = store.bounds.wh;
   }
 
   render() {
@@ -158,6 +186,8 @@ export default new class {
     this.time = this.clock.getElapsedTime();
 
     this.fbo.update(this.time);
+
+    this.fullScreenQuad.material.uniforms.uTime.value = this.time;
 
     this.renderer.render(this.scene, this.camera);
   }
