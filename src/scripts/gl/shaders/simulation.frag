@@ -1,4 +1,4 @@
-uniform sampler2D positions; // DATA Texture containing original positions
+uniform sampler2D positions; // Data Texture containing original positions
 uniform float uTime;
 
 varying vec2 vUv;
@@ -26,13 +26,12 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 }
 
 void main() {
-  // Basic simulation: displays the particles in place.
-  vec3 pos = texture2D(positions, vUv).rgb;
+  vec3 pos = texture2D(positions, vUv).rgb; // basic simulation: displays the particles in place.
   float t = uTime * 0.15;
 
-  // We can move the particle here
+  // Move the particles here
   // pos = rotate(pos, vec3(0.0, 0.0, 1.0), t + sin(length(pos.xy) * 2.0 + PI * 0.5) * 10.0);
-  // // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
+  // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
   // pos.z += tan(length(length(pos.xy) * 10.0) - uTime) * 1.0;
   pos = curl(pos * 0.25 + t);
   
