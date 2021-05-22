@@ -10,7 +10,7 @@ void main() {
 
   vec3 color1 = vec3(0.0, 0.0, 0.0);
   vec3 color2 = vec3(1.0, 0.0, 0.5);
-  float pattern = sin(length(uv) * 0.75);
+  float pattern = sin(length(uv) * 1.0);
   vec3 background = mix(
     color1,
     color2,

@@ -80,7 +80,7 @@ export default new class {
        .name('particle size')
        .onChange(() => this.renderMaterial.uniforms.uPointSize.value = this.tweaks.pointSize);
 
-    GUI.add(this.tweaks, 'speed', 0.1, 1, 0.01)
+    GUI.add(this.tweaks, 'speed', 0.0, 1, 0.001)
        .onChange(() => this.simMaterial.uniforms.uSpeed.value = this.tweaks.speed);
 
     GUI.add(this.tweaks, 'curlFreq', 0, 0.6, 0.01)
