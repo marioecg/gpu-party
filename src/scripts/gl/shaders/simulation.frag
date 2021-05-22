@@ -1,5 +1,7 @@
 uniform sampler2D positions; // Data Texture containing original positions
 uniform float uTime;
+uniform float uSpeed;
+uniform float uCurlFreq;
 
 varying vec2 vUv;
 
@@ -26,14 +28,17 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 }
 
 void main() {
-  vec3 pos = texture2D(positions, vUv).rgb; // basic simulation: displays the particles in place.
-  float t = uTime * 0.15;
+  float t = uTime * 0.15 * uSpeed;
+
+  vec2 uv = vUv;
+
+  vec3 pos = texture2D(positions, uv).rgb; // basic simulation: displays the particles in place.
 
   // Move the particles here
   // pos = rotate(pos, vec3(0.0, 0.0, 1.0), t + sin(length(pos.xy) * 2.0 + PI * 0.5) * 10.0);
   // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
-  // pos.z += tan(length(length(pos.xy) * 10.0) - uTime) * 1.0;
-  pos = curl(pos * 0.25 + t);
+  // pos.z += tan(length(length(pos.xy) * 10.0) - t) * 1.0;
+  pos = curl(pos * uCurlFreq + t);
   
   gl_FragColor = vec4(pos, 1.0);
 }

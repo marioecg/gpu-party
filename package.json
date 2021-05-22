@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/marioecg/IknowhowIfeel#readme",
   "dependencies": {
+    "dat.gui": "^0.7.7",
     "glsl-curl-noise": "^0.0.4",
     "glsl-noise": "^0.0.0",
     "gsap": "^3.6.1",

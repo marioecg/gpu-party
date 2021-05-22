@@ -14,6 +14,8 @@ import particlesFragment from './shaders/particles.frag';
 
 import { getRandomSpherePoint } from '../utils';
 
+import GUI from '../gui';
+
 export default new class {
   constructor() {
     this.renderer = new THREE.WebGL1Renderer({ 
@@ -30,7 +32,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 3.5);
+    this.camera.position.set(0, 0, 4);
 
     this.scene = new THREE.Scene();
 
@@ -48,6 +50,7 @@ export default new class {
   init() {
     this.addCanvas();
     this.addEvents();
+    this.setGui();
     this.createFBO();
   }
 
@@ -60,6 +63,25 @@ export default new class {
   addEvents() {
     Events.on('tick', this.render.bind(this));
     Events.on('resize', this.resize.bind(this));
+  }
+
+  setGui() {
+    this.tweaks = {
+      pointSize: 1.2,
+      speed: 0.5,
+      curlFreq: 0.25,
+    };
+
+    GUI.add(this.tweaks, 'pointSize', 1, 3, 0.1)
+       .name('particle size')
+       .onChange(() => this.renderMaterial.uniforms.uPointSize.value = this.tweaks.pointSize);
+
+    GUI.add(this.tweaks, 'speed', 0.1, 1, 0.01)
+       .onChange(() => this.simMaterial.uniforms.uSpeed.value = this.tweaks.speed);
+
+    GUI.add(this.tweaks, 'curlFreq', 0, 0.6, 0.01)
+       .name('noise frequency')
+       .onChange(() => this.simMaterial.uniforms.uCurlFreq.value = this.tweaks.curlFreq);
   }
 
   createFBO() {
@@ -89,31 +111,33 @@ export default new class {
     positions.needsUpdate = true;
 
     // Simulation shader material used to update the particles' positions
-    const simMaterial = new THREE.ShaderMaterial({
+    this.simMaterial = new THREE.ShaderMaterial({
       vertexShader: simVertex,
       fragmentShader: simFragment,
       uniforms: {
         positions: { value: positions },
         uTime: { value: 0 },
+        uSpeed: { value: this.tweaks.speed },
+        uCurlFreq: { value: this.tweaks.curlFreq },
       },
     });
 
     // Render shader material to display the particles on screen
-    // the positions uniform will be set after the fbo.update() call
-    const renderMaterial = new THREE.ShaderMaterial({
+    // the positions uniform will be set after the this.fbo.update() call
+    this.renderMaterial = new THREE.ShaderMaterial({
       vertexShader: particlesVertex,
       fragmentShader: particlesFragment,
       uniforms: {
         positions: { value: null },
         uTime: { value: 0 },
-        uPointSize: { value: 2 },
+        uPointSize: { value: this.tweaks.pointSize },
       },
       transparent: true,
       blending: THREE.AdditiveBlending
     });
 
     // Initialize the FBO
-    this.fbo = new FBO(width, height, this.renderer, simMaterial, renderMaterial);
+    this.fbo = new FBO(width, height, this.renderer, this.simMaterial, this.renderMaterial);
     // Add the particles to the scene
     this.scene.add(this.fbo.particles);
   }
