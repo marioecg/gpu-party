@@ -2,6 +2,7 @@ uniform sampler2D positions; // Data Texture containing original positions
 uniform float uTime;
 uniform float uSpeed;
 uniform float uCurlFreq;
+uniform float uStrength;
 
 varying vec2 vUv;
 
@@ -33,6 +34,7 @@ void main() {
 
   vec2 uv = vUv;
 
+  vec3 defaultPos = texture2D(positions, uv).rgb;
   vec3 pos = texture2D(positions, uv).rgb; // basic simulation: displays the particles in place.
   vec3 curlPos = texture2D(positions, uv).rgb;
   vec3 finalPos = vec3(0.0);
@@ -43,13 +45,15 @@ void main() {
   // pos.z += tan(length(length(pos.xy) * 10.0) - t) * 1.0;
   pos = curl(pos * uCurlFreq + t);
 
-  curlPos = curl(curlPos * uCurlFreq + t);
-  curlPos += curl(curlPos * uCurlFreq * 2.0 ) *  0.5;
-  curlPos += curl(curlPos * uCurlFreq * 4.0 ) *  0.25;
-  curlPos += curl(curlPos * uCurlFreq * 8.0 ) *  0.125;
-  curlPos += curl(pos * uCurlFreq * 16.0) *  0.0625;
+  curlPos =  curl(curlPos * uCurlFreq + t);
+  curlPos += curl(curlPos * uCurlFreq * 2.0  * uStrength  + t) * 0.5 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 4.0  * uStrength  + t) * 0.25 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 8.0  * uStrength  + t) * 0.125 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 16.0 * uStrength  + t) * 0.0625 * uStrength;
 
-  finalPos = mix(pos, curlPos, noise(pos + t));
+  float x = noise(pos + t);
+  // x = smoothstep(0.0, 1.0, x);
+  finalPos = mix(pos, curlPos, x);
   
-  gl_FragColor = vec4(finalPos, 1.0);
+  gl_FragColor = vec4(curlPos, 1.0);
 }

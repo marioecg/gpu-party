@@ -95,7 +95,7 @@ export default class FBO {
     
     // Create the particles geometry
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));  
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));      
     
     // The renderMaterial is used to render the particles
     this.particles = new THREE.Points(geometry, this.renderMaterial);    
@@ -110,7 +110,7 @@ export default class FBO {
     
     // Use the result of the swap as the new position for the particles' renderer
     this.particles.material.uniforms.positions.value = this.rtt.texture;    
-
+    this.particles.material.uniforms.uTime.value = time;    
     this.simulationMaterial.uniforms.uTime.value = time;
   }
 }

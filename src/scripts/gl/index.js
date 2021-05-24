@@ -53,8 +53,8 @@ export default new class {
     this.addCanvas();
     this.addEvents();
     this.setGui();
-    this.createFBO();
     this.createScreenQuad();
+    this.createFBO();
   }
 
   addCanvas() {
@@ -71,9 +71,10 @@ export default new class {
   setGui() {
     this.tweaks = {
       pointSize: 1.2,
-      speed: 0.3,
-      curlFreq: 0.25,
-      opacity: 0.35,
+      speed: 0.2,
+      curlFreq: 0.15,
+      opacity: 0.7,
+      strength: 1,
     };
 
     GUI.add(this.tweaks, 'pointSize', 1, 3, 0.1)
@@ -89,6 +90,9 @@ export default new class {
 
     GUI.add(this.tweaks, 'opacity', 0.1, 1.0, 0.01)
        .onChange(() => this.renderMaterial.uniforms.uOpacity.value = this.tweaks.opacity);
+
+    GUI.add(this.tweaks, 'strength', 0.1, 10.0, 0.01)
+       .onChange(() => this.simMaterial.uniforms.uStrength.value = this.tweaks.strength);
   }
 
   createFBO() {
@@ -126,6 +130,7 @@ export default new class {
         uTime: { value: 0 },
         uSpeed: { value: this.tweaks.speed },
         uCurlFreq: { value: this.tweaks.curlFreq },
+        uStrength: { value: this.tweaks.strength },
       },
     });
 
@@ -139,6 +144,7 @@ export default new class {
         uTime: { value: 0 },
         uPointSize: { value: this.tweaks.pointSize },
         uOpacity: { value: this.tweaks.opacity },
+        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
       },
       transparent: true,
       blending: THREE.AdditiveBlending
@@ -146,6 +152,7 @@ export default new class {
 
     // Initialize the FBO
     this.fbo = new FBO(width, height, this.renderer, this.simMaterial, this.renderMaterial);
+
     // Add the particles to the scene
     this.scene.add(this.fbo.particles);
   }
@@ -160,11 +167,12 @@ export default new class {
         uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
       },
       depthTest: false,
-      blending: THREE.AdditiveBlending      
+      transparent: true,
     });
 
     this.fullScreenQuad = new THREE.Mesh(geometry, material);
-    this.scene.add(this.fullScreenQuad);
+
+    // this.scene.add(this.fullScreenQuad);
   }
 
   resize() {
@@ -176,6 +184,9 @@ export default new class {
 
     this.camera.updateProjectionMatrix();
 
+    this.fbo.points.material.uniforms.uResolution.value.x = store.bounds.ww;
+    this.fbo.points.material.uniforms.uResolution.value.y = store.bounds.wh;
+
     this.fullScreenQuad.material.uniforms.uResolution.value.x = store.bounds.ww;
     this.fullScreenQuad.material.uniforms.uResolution.value.y = store.bounds.wh;
   }
@@ -186,6 +197,8 @@ export default new class {
     this.time = this.clock.getElapsedTime();
 
     this.fbo.update(this.time);
+
+    // this.fbo.particles.rotation.y = this.time * 0.1;
 
     this.fullScreenQuad.material.uniforms.uTime.value = this.time;
 
