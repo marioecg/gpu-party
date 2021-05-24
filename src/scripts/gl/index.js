@@ -198,7 +198,7 @@ export default new class {
 
     this.fbo.update(this.time);
 
-    // this.fbo.particles.rotation.y = this.time * 0.1;
+    // this.fbo.particles.rotation.z = this.time * 0.2;
 
     this.fullScreenQuad.material.uniforms.uTime.value = this.time;
 
