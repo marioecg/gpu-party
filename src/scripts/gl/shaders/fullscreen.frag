@@ -16,5 +16,5 @@ void main() {
     color2,
     1.0 - pattern
   );
-  gl_FragColor = vec4(background, 1.0);
+  gl_FragColor = vec4(vec3(0.0), 1.0);
 }

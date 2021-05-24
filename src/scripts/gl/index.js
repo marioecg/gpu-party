@@ -71,7 +71,7 @@ export default new class {
   setGui() {
     this.tweaks = {
       pointSize: 1.2,
-      speed: 0.5,
+      speed: 0.3,
       curlFreq: 0.25,
       opacity: 0.35,
     };
