@@ -136,10 +136,11 @@ export default new class {
     // Fullscreen
     const triangleGeometry = getFullscreenTriangle();
     const triangleMaterial = new THREE.MeshBasicMaterial({
-      map: this.currentFrame.texture
+      map: this.currentFrame.texture,
+      // color: 0xff0000,
     });
 
-    this.fullscreenTriangle = new THREE.Mesh(triangleGeometry, triangleMaterial);
+    this.fullscreenTriangle = new THREE.Mesh(new THREE.BoxGeometry(1), triangleMaterial);
     this.savedScene.add(this.fullscreenTriangle);
   }
 
@@ -229,15 +230,13 @@ export default new class {
     // Feedback ping pong
     this.renderer.setRenderTarget(this.currentFrame);
     this.renderer.render(this.scene, this.camera);
-    this.fullscreenTriangle.material.map = this.currentFrame.texture;
+    // this.fullscreenTriangle.material.map = this.currentFrame.texture;
 
     this.renderer.setRenderTarget(this.previousFrame); 
     this.renderer.render(this.savedScene, this.savedCamera);
 
-    this.backgroundMesh.material.uniforms.tMap.value = this.previousFrame.texture;
+    // // this.backgroundMesh.material.uniforms.tMap.value = this.previousFrame.texture;
     this.renderer.setRenderTarget(null) // Render back to the screen
     this.renderer.render(this.savedScene, this.savedCamera);   
-  
-    this.renderer.render(this.scene, this.camera);
   }
 }

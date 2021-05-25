@@ -8,6 +8,9 @@ void main() {
   float aspect = uResolution.x / uResolution.y;
   vec2 uv = vUv;
   uv = fract(uv * 2.0);
+  // uv -= 0.5;
+  // uv *= 0.99;
+  // uv += 0.5;  
 
   // Feedback
   vec4 feedback = texture2D(tMap, uv);
