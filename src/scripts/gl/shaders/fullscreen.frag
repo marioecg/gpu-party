@@ -1,20 +1,16 @@
 uniform vec2 uResolution;
 uniform float uTime;
+uniform sampler2D tMap;
 
 varying vec2 vUv;
 
 void main() {
   float aspect = uResolution.x / uResolution.y;
-  vec2 uv = vUv - 0.5;
-  uv.x *= aspect;
+  vec2 uv = vUv;
+  uv = fract(uv * 2.0);
 
-  vec3 color1 = vec3(0.0, 0.0, 0.0);
-  vec3 color2 = vec3(1.0, 0.0, 0.5);
-  float pattern = sin(length(uv) * 1.0);
-  vec3 background = mix(
-    color1,
-    color2,
-    1.0 - pattern
-  );
-  gl_FragColor = vec4(vec3(0.0), 1.0);
+  // Feedback
+  vec4 feedback = texture2D(tMap, uv);
+  
+  gl_FragColor = vec4(feedback.rgb, 1.0);
 }

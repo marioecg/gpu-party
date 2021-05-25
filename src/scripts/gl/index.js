@@ -14,7 +14,7 @@ import particlesFragment from './shaders/particles.frag';
 import fullScreenVertex from './shaders/fullscreen.vert';
 import fullScreenFragment from './shaders/fullscreen.frag';
 
-import { getRandomSpherePoint } from '../utils';
+import { getRandomSpherePoint, getFullscreenTriangle, getViewSizeAtDepth } from '../utils';
 
 import GUI from '../gui';
 
@@ -24,7 +24,8 @@ export default new class {
       antialias: true, 
       alpha: true, 
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    this.dpr = Math.min(window.devicePixelRatio, 1.5);
+    this.renderer.setPixelRatio(this.dpr);
     this.renderer.setSize(store.bounds.ww, store.bounds.wh);
     this.renderer.setClearColor(0x000000, 0);
 
@@ -34,7 +35,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 4);
+    this.camera.position.set(0, 0, 5);
 
     this.scene = new THREE.Scene();
 
@@ -45,6 +46,7 @@ export default new class {
 
     this.clock = new THREE.Clock();
     this.time = null;
+    this.viewSize = getViewSizeAtDepth(this.camera);
 
     this.init();
   }
@@ -53,8 +55,9 @@ export default new class {
     this.addCanvas();
     this.addEvents();
     this.setGui();
-    this.createFBO();
-    this.createScreenQuad();
+    this.feedbackSetup();
+    this.createFeedbackObjects();
+    // this.createFBO();
   }
 
   addCanvas() {
@@ -89,6 +92,55 @@ export default new class {
 
     GUI.add(this.tweaks, 'opacity', 0.1, 1.0, 0.01)
        .onChange(() => this.renderMaterial.uniforms.uOpacity.value = this.tweaks.opacity);
+  }
+
+  feedbackSetup() {
+    const width = store.bounds.ww * this.dpr;
+    const height = store.bounds.wh * this.dpr;
+
+    this.currentFrame = new THREE.WebGLRenderTarget(width, height); // Actual render
+    this.previousFrame = new THREE.WebGLRenderTarget(width, height); // Saved target to change every frame
+
+    // Setup feedback pass scene and camera
+    this.savedScene = new THREE.Scene();
+    this.savedCamera = new THREE.Camera();
+  }  
+
+  createFeedbackObjects() {
+    // Test box
+    const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
+    const boxMaterial = new THREE.MeshNormalMaterial();
+    this.box = new THREE.Mesh(boxGeometry, boxMaterial);
+    this.scene.add(this.box);    
+
+    // Background
+    const backgroundGeometry = new THREE.PlaneGeometry(1, 1, 1);
+    const backgroundMaterial = new THREE.ShaderMaterial({
+      vertexShader: fullScreenVertex,
+      fragmentShader: fullScreenFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
+        tMap: { value: this.previousFrame.texture },
+      },
+      depthTest: false,
+      depthWrite: false,
+    });
+
+    this.backgroundMesh = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+    this.backgroundMesh.renderOrder = -1;    
+    this.backgroundMesh.scale.set(this.viewSize.width, this.viewSize.height, 1);
+    this.backgroundMesh.position.set(0, 0, 0);
+    this.scene.add(this.backgroundMesh);
+
+    // Fullscreen
+    const triangleGeometry = getFullscreenTriangle();
+    const triangleMaterial = new THREE.MeshBasicMaterial({
+      map: this.currentFrame.texture
+    });
+
+    this.fullscreenTriangle = new THREE.Mesh(triangleGeometry, triangleMaterial);
+    this.savedScene.add(this.fullscreenTriangle);
   }
 
   createFBO() {
@@ -146,26 +198,10 @@ export default new class {
 
     // Initialize the FBO
     this.fbo = new FBO(width, height, this.renderer, this.simMaterial, this.renderMaterial);
+
     // Add the particles to the scene
     this.scene.add(this.fbo.particles);
-  }
-
-  createScreenQuad() {
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const material = new THREE.ShaderMaterial({
-      vertexShader: fullScreenVertex,
-      fragmentShader: fullScreenFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
-      },
-      depthTest: false,
-      blending: THREE.AdditiveBlending      
-    });
-
-    this.fullScreenQuad = new THREE.Mesh(geometry, material);
-    this.scene.add(this.fullScreenQuad);
-  }
+  }  
 
   resize() {
     let width = store.bounds.ww;
@@ -176,8 +212,8 @@ export default new class {
 
     this.camera.updateProjectionMatrix();
 
-    this.fullScreenQuad.material.uniforms.uResolution.value.x = store.bounds.ww;
-    this.fullScreenQuad.material.uniforms.uResolution.value.y = store.bounds.wh;
+    // this.fullscreenTriangle.material.uniforms.uResolution.value.x = store.bounds.ww;
+    // this.fullscreenTriangle.material.uniforms.uResolution.value.y = store.bounds.wh;
   }
 
   render() {
@@ -185,10 +221,23 @@ export default new class {
 
     this.time = this.clock.getElapsedTime();
 
-    this.fbo.update(this.time);
+    // this.fbo.update(this.time);
 
-    this.fullScreenQuad.material.uniforms.uTime.value = this.time;
+    this.box.rotation.x = this.time;
+    this.box.rotation.y = this.time;    
 
+    // Feedback ping pong
+    this.renderer.setRenderTarget(this.currentFrame);
+    this.renderer.render(this.scene, this.camera);
+    this.fullscreenTriangle.material.map = this.currentFrame.texture;
+
+    this.renderer.setRenderTarget(this.previousFrame); 
+    this.renderer.render(this.savedScene, this.savedCamera);
+
+    this.backgroundMesh.material.uniforms.tMap.value = this.previousFrame.texture;
+    this.renderer.setRenderTarget(null) // Render back to the screen
+    this.renderer.render(this.savedScene, this.savedCamera);   
+  
     this.renderer.render(this.scene, this.camera);
   }
 }

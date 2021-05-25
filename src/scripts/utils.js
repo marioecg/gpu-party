@@ -23,3 +23,23 @@ export function getRandomSpherePoint() {
 
   return vector;
 }
+
+// Fullscreen triangle to use Render Traget Texture
+export function getFullscreenTriangle() {
+  const vertices = new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]);
+  const uvs = new Float32Array([0, 0, 2, 0, 0, 2]);
+
+  const geometry = new THREE.BufferGeometry();
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+}
+
+// Get width and height of view in world space coordinates
+export function getViewSizeAtDepth(camera, depth = 0) {
+  const fovInRadians = (camera.fov * Math.PI) / 180;
+  const height = Math.abs(
+    (camera.position.z - depth) * Math.tan(fovInRadians / 2) * 2
+  );
+  return { width: height * camera.aspect, height };
+}

@@ -102,6 +102,7 @@ export default class FBO {
   }
 
   update(time) {
+    // Ping pong
     // Update the simulation and render the result to a target texture
     this.renderer.setRenderTarget(this.rtt);
     this.renderer.clear();
