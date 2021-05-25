@@ -46,14 +46,14 @@ void main() {
   pos = curl(pos * uCurlFreq + t);
 
   curlPos =  curl(curlPos * uCurlFreq + t);
-  curlPos += curl(curlPos * uCurlFreq * 2.0  * uStrength  + t) * 0.5 * uStrength;
-  curlPos += curl(curlPos * uCurlFreq * 4.0  * uStrength  + t) * 0.25 * uStrength;
-  curlPos += curl(curlPos * uCurlFreq * 8.0  * uStrength  + t) * 0.125 * uStrength;
-  curlPos += curl(curlPos * uCurlFreq * 16.0 * uStrength  + t) * 0.0625 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 2.0  * uStrength  + t * 0.0) * 0.5 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 4.0  * uStrength  + t * 0.0) * 0.25 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 8.0  * uStrength  + t * 0.0) * 0.125 * uStrength;
+  curlPos += curl(curlPos * uCurlFreq * 16.0 * uStrength  + t * 0.0) * 0.0625 * uStrength;
 
-  float x = noise(pos + t);
+  // float x = noise(pos + t);
   // x = smoothstep(-1.0, 1.0, x);
-  finalPos = mix(pos, curlPos, x);
+  // finalPos = mix(pos, curlPos, x);
   
-  gl_FragColor = vec4(finalPos, 1.0);
+  gl_FragColor = vec4(curlPos, 1.0);
 }

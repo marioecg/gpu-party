@@ -11,9 +11,9 @@ void main() {
   if (circle < 1.0) discard;
   // if (circle < 1.0) discard;
   // gl_FragColor = vec4(vec3(1.0), 0.25);
-  vec3 color1 = vec3(1.0, 0.0, 0.0);
-  vec3 color2 = vec3(0.0, 0.0, 1.0);
-  float n = noise(uv.xyx * 2.0 + uTime * 0.2) * 0.5 + 0.5;
+  vec3 color1 = vec3(0.5, 0.0, 1.0);
+  vec3 color2 = vec3(0.0, 1.0, 1.0);
+  float n = noise(uv.xyx * 20.0 + uTime * 0.0) * 0.5 + 0.5;
   vec3 finalColor = mix(color1, color2, n);
 
   gl_FragColor = vec4(finalColor, uOpacity);
