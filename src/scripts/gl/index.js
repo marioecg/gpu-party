@@ -11,8 +11,6 @@ import simVertex from './shaders/simulation.vert';
 import simFragment from './shaders/simulation.frag';
 import particlesVertex from './shaders/particles.vert';
 import particlesFragment from './shaders/particles.frag';
-import fullScreenVertex from './shaders/fullscreen.vert';
-import fullScreenFragment from './shaders/fullscreen.frag';
 
 import { getRandomSpherePoint } from '../utils';
 
@@ -26,7 +24,7 @@ export default new class {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(store.bounds.ww, store.bounds.wh);
-    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.setClearColor(0xffffff, 0);
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -53,7 +51,6 @@ export default new class {
     this.addCanvas();
     this.addEvents();
     this.setGui();
-    this.createScreenQuad();
     this.createFBO();
   }
 
@@ -71,8 +68,8 @@ export default new class {
   setGui() {
     this.tweaks = {
       pointSize: 1.2,
-      speed: 0.2,
-      curlFreq: 0.15,
+      speed: 0.8,
+      curlFreq: 0.35,
       opacity: 0.7,
       strength: 1,
     };
@@ -105,16 +102,16 @@ export default new class {
     let data = new Float32Array(length);
     for (let i = 0; i < length; i += 3) {
       // Random positions inside a sphere
-      const point = getRandomSpherePoint();
-      data[i + 0] = point.x;
-      data[i + 1] = point.y;
-      data[i + 2] = point.z;      
+      // const point = getRandomSpherePoint();
+      // data[i + 0] = point.x;
+      // data[i + 1] = point.y;
+      // data[i + 2] = point.z;      
 
-      // // Replaced with this if you want 
-      // // random positions inside a cube
-      // data[i + 0] = Math.random() - 0.5;
-      // data[i + 1] = Math.random() - 0.5;
-      // data[i + 2] = Math.random() - 0.5;      
+      // Replaced with this if you want 
+      // random positions inside a cube
+      data[i + 0] = Math.random() - 0.5;
+      data[i + 1] = Math.random() - 0.5;
+      data[i + 2] = Math.random() - 0.5;      
     }
 
     // Convert the data to a FloatTexture
@@ -157,24 +154,6 @@ export default new class {
     this.scene.add(this.fbo.particles);
   }
 
-  createScreenQuad() {
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const material = new THREE.ShaderMaterial({
-      vertexShader: fullScreenVertex,
-      fragmentShader: fullScreenFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
-      },
-      depthTest: false,
-      transparent: true,
-    });
-
-    this.fullScreenQuad = new THREE.Mesh(geometry, material);
-
-    // this.scene.add(this.fullScreenQuad);
-  }
-
   resize() {
     let width = store.bounds.ww;
     let height = store.bounds.wh;
@@ -186,9 +165,6 @@ export default new class {
 
     this.fbo.points.material.uniforms.uResolution.value.x = store.bounds.ww;
     this.fbo.points.material.uniforms.uResolution.value.y = store.bounds.wh;
-
-    this.fullScreenQuad.material.uniforms.uResolution.value.x = store.bounds.ww;
-    this.fullScreenQuad.material.uniforms.uResolution.value.y = store.bounds.wh;
   }
 
   render() {
@@ -197,10 +173,6 @@ export default new class {
     this.time = this.clock.getElapsedTime();
 
     this.fbo.update(this.time);
-
-    // this.fbo.particles.rotation.z = this.time * 0.2;
-
-    this.fullScreenQuad.material.uniforms.uTime.value = this.time;
 
     this.renderer.render(this.scene, this.camera);
   }
