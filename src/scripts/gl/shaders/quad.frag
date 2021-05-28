@@ -7,12 +7,9 @@ varying vec2 vUv;
 void main() {
   float aspect = uResolution.x / uResolution.y;
   vec2 uv = vUv;
-  // uv -= 0.5;
-  // uv *= 0.99;
-  // uv += 0.5;  
 
   // Feedback
-  vec4 feedback = texture2D(tBuffer, uv);
+  vec4 toScreen = texture2D(tBuffer, uv);
   
-  gl_FragColor = vec4(feedback.rgb, 1.0);
+  gl_FragColor = vec4(toScreen.rgb, 1.0);
 }
