@@ -12,6 +12,11 @@ import simFragment from './shaders/simulation.frag';
 import particlesVertex from './shaders/particles.vert';
 import particlesFragment from './shaders/particles.frag';
 
+import starsSimVertex from './shaders/stars/simulation.vert';
+import starsSimFragment from './shaders/stars/simulation.frag';
+import starsParticlesVertex from './shaders/stars/particles.vert';
+import starsParticlesFragment from './shaders//stars/particles.frag';
+
 import { getRandomSpherePoint } from '../utils';
 
 import GUI from '../gui';
@@ -32,7 +37,7 @@ export default new class {
       0.1,
       1000
     );
-    this.camera.position.set(0, 0, 4);
+    this.camera.position.set(0, 0, 10);
 
     this.scene = new THREE.Scene();
 
@@ -68,8 +73,8 @@ export default new class {
   setGui() {
     this.tweaks = {
       pointSize: 1.2,
-      speed: 0.8,
-      curlFreq: 0.35,
+      speed: 1,
+      curlFreq: 0.6,
       opacity: 0.7,
       strength: 1,
     };
@@ -94,24 +99,29 @@ export default new class {
 
   createFBO() {
     // width and height of FBO
-    const width = 512;
-    const height = 512;
+    const width = 512 * 2;
+    const height = 512 * 2;
 
     // Populate a Float32Array of random positions
     let length = width * height * 3;
     let data = new Float32Array(length);
     for (let i = 0; i < length; i += 3) {
       // Random positions inside a sphere
-      // const point = getRandomSpherePoint();
-      // data[i + 0] = point.x;
-      // data[i + 1] = point.y;
-      // data[i + 2] = point.z;      
+      const point = getRandomSpherePoint();
+      data[i + 0] = point.x;
+      data[i + 1] = point.y;
+      data[i + 2] = point.z;      
 
-      // Replaced with this if you want 
-      // random positions inside a cube
+      // // Replaced with this if you want 
+      // // random positions inside a cube
+      // data[i + 0] = Math.random() - 0.5;
+      // data[i + 1] = Math.random() - 0.5;
+      // data[i + 2] = Math.random() - 0.5;      
+
+      // Or random positions along a plane
       data[i + 0] = Math.random() - 0.5;
       data[i + 1] = Math.random() - 0.5;
-      data[i + 2] = Math.random() - 0.5;      
+      data[i + 2] = 0;      
     }
 
     // Convert the data to a FloatTexture
@@ -151,7 +161,53 @@ export default new class {
     this.fbo = new FBO(width, height, this.renderer, this.simMaterial, this.renderMaterial);
 
     // Add the particles to the scene
+    this.fbo.particles.rotation.y = Math.PI * -0.5;
     this.scene.add(this.fbo.particles);
+
+    // Stars fbo
+    // width and height of FBO
+    const w = 256 * 1.5;
+    const h = 256 * 1.5;
+
+    // Populate a Float32Array of random positions
+    let starsData = new Float32Array(w * h * 3);
+    for (let i = 0; i < length; i += 3) {
+      // Random positions inside a sphere
+      const point = getRandomSpherePoint();
+      starsData[i + 0] = point.x;
+      starsData[i + 1] = point.y;
+      starsData[i + 2] = point.z;      
+    }    
+
+    // Convert the data to a FloatTexture
+    const starPositions = new THREE.DataTexture(starsData, w, h, THREE.RGBFormat, THREE.FloatType);
+
+    // Simulation shader material used to update the particles' positions
+    this.simMaterial2 = new THREE.ShaderMaterial({
+      vertexShader: starsSimVertex,
+      fragmentShader: starsSimFragment,
+      uniforms: {
+        positions: { value: starPositions },
+        uTime: { value: 0 },
+      },
+    });
+
+    // Render shader material to display the particles on screen
+    // the positions uniform will be set after the this.fbo.update() call
+    this.renderMaterial2 = new THREE.ShaderMaterial({
+      vertexShader: starsParticlesVertex,
+      fragmentShader: starsParticlesFragment,
+      uniforms: {
+        positions: { value: null },
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(store.bounds.ww, store.bounds.wh) },
+      },
+      transparent: true,
+      blending: THREE.AdditiveBlending
+    });    
+
+    // this.stars = new FBO(w, h, this.renderer, this.simMaterial2, this.renderMaterial2);    
+    // this.scene.add(this.stars.particles);    
   }
 
   resize() {
@@ -173,6 +229,7 @@ export default new class {
     this.time = this.clock.getElapsedTime();
 
     this.fbo.update(this.time);
+    // this.stars.update(this.time);
 
     this.renderer.render(this.scene, this.camera);
   }

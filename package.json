@@ -20,6 +20,7 @@
   "dependencies": {
     "dat.gui": "^0.7.7",
     "glsl-curl-noise": "^0.0.4",
+    "glsl-map": "^1.0.1",
     "glsl-noise": "^0.0.0",
     "gsap": "^3.6.1",
     "lodash.debounce": "^4.0.8",

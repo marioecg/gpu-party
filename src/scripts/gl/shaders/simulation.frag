@@ -30,7 +30,7 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 }
 
 void main() {
-  float t = uTime * 0.15 * uSpeed;
+  float t = uTime * 1.0 * uSpeed;
 
   vec2 uv = vUv;
 
@@ -43,7 +43,7 @@ void main() {
   // pos = rotate(pos, vec3(0.0, 0.0, 1.0), t + sin(length(pos.xy) * 2.0 + PI * 0.5) * 10.0);
   // pos = rotate(pos, vec3(1.0, 0.0, 0.0), -t);
   // pos.z += tan(length(length(pos.xy) * 10.0) - t) * 1.0;
-  pos = curl(pos * uCurlFreq + t);
+  pos = curl(pos * uCurlFreq );
 
   curlPos =  curl(curlPos * uCurlFreq + t);
   curlPos += curl(curlPos * uCurlFreq * 2.0  * uStrength  + t * 0.0) * 0.5 * uStrength;
@@ -54,6 +54,12 @@ void main() {
   float x = noise(pos + t);
   // x = smoothstep(-1.0, 1.0, x);
   finalPos = mix(pos, curlPos, x);
+
+  defaultPos = curl(defaultPos);
+  defaultPos.z += tan(length(defaultPos.xy) * 10.0 + t) * 1.0;
+  defaultPos += pos;
+  float angle = sin(length(defaultPos) * uStrength);
+  defaultPos = rotate(defaultPos, vec3(0.0, 0.0, 1.0), angle);
   
-  gl_FragColor = vec4(finalPos, 1.0);
+  gl_FragColor = vec4(defaultPos, 1.0);
 }
