@@ -5,6 +5,14 @@ import { Events } from '../events';
 
 import store from '../store';
 
+import outputVertex from './shaders/output.vert';
+import outputFragment from './shaders/output.frag';
+import feedbackFrag from './shaders/feedback.frag';
+import startFragment from './shaders/start.frag';
+
+const loopRes = new THREE.Vector2(64.0, 64.0);
+const outputRes = new THREE.Vector2(512.0, 512.0);
+
 export default new class {
   constructor() {
     this.renderer = new THREE.WebGL1Renderer({ 
@@ -55,11 +63,67 @@ export default new class {
   }
 
   feedbackSetup() {
-    // Test box
-    const boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
-    const boxMaterial = new THREE.MeshNormalMaterial();
-    this.box = new THREE.Mesh(boxGeometry, boxMaterial);
-    this.scene.add(this.box);    
+    // Setup scenes          
+    this.sceneOutput = new THREE.Scene();
+    this.sceneFeedback = new THREE.Scene();
+    this.sceneStart = new THREE.Scene();
+    
+    // Create buffers
+    const width = store.bounds.ww * this.dpr;
+    const height = store.bounds.wh * this.dpr;
+    const renderTargetParams = {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+      needsUpdate: true,
+    };    
+    this.feedbackTexture = new THREE.WebGLRenderTarget(loopRes.x, loopRes.y, renderTargetParams);              
+    this.feedbackTexture2 = new THREE.WebGLRenderTarget(loopRes.x, loopRes.y, renderTargetParams);     
+    
+    // Setup algorithm camera
+    this.cameraLoop = new THREE.OrthographicCamera(loopRes.x / - 2, loopRes.x / 2, loopRes.y / 2, loopRes.y / - 2, -10000, 10000);
+    
+    // Setup sceneOutput camera
+    this.cameraOutput = new THREE.PerspectiveCamera(60, store.bounds.ww / store.bounds.wh, 1, 10000);
+    this.cameraOutput.position.z = 300;    
+
+    // Feedback shader
+    const feedbackMat = new THREE.ShaderMaterial({
+      vertexShader: outputVertex,
+      fragmentShader: feedbackFrag,
+      uniforms: {
+        texture: { value: this.feedbackTexture2.texture },
+      },
+    });             
+    const feedbackGeo = new THREE.PlaneGeometry(loopRes.x, loopRes.y);
+    this.feedbackQuad = new THREE.Mesh(feedbackGeo, feedbackMat);
+    this.feedbackQuad.position.z = -100;
+    this.sceneFeedback.add(this.feedbackQuad);  
+    
+    // Output shader
+    const screenMat = new THREE.ShaderMaterial({
+      vertexShader: outputVertex,
+      fragmentShader: outputFragment,
+      uniforms: {
+        fb2output: { value: this.feedbackTexture2.texture }
+      },
+    });
+    const screenGeo = new THREE.PlaneGeometry(outputRes.x, outputRes.y);              
+    this.sceneQuad = new THREE.Mesh(screenGeo , screenMat);
+    this.sceneQuad.position.z = -200;
+    this.sceneOutput.add(this.sceneQuad);    
+
+    // Init shader  
+    const startMat = new THREE.ShaderMaterial({
+      vertexShader: outputVertex,
+      fragmentShader: startFragment,      
+      uniforms: {
+        
+      },
+    });
+    const startGeo = new THREE.PlaneBufferGeometry(loopRes.x, loopRes.y);              
+    this.startQuad = new THREE.Mesh(startGeo , startMat);
+    this.startQuad.position.z = -100;
+    this.sceneStart.add(this.startQuad);        
   }  
 
   resize() {
@@ -75,11 +139,16 @@ export default new class {
   render() {
     this.controls.update();
 
-    this.time = this.clock.getElapsedTime();
+    this.time = this.clock.getElapsedTime();    
 
-    this.box.rotation.x = this.time * 0.5;
-    this.box.rotation.y = this.time * 0.5;    
+    this.renderer.setRenderTarget(this.feedbackTexture);
+    this.renderer.render(this.sceneFeedback, this.cameraLoop);
 
-    this.renderer.render(this.scene, this.camera);
+    let a = this.feedbackTexture2;
+    this.feedbackTexture2 = this.feedbackTexture;
+    this.feedbackTexture = a;
+    this.feedbackQuad.material.uniforms.texture.value = this.feedbackTexture2.texture
+
+    this.renderer.render(this.sceneOutput, this.cameraOutput);    
   }
 }
