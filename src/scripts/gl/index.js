@@ -73,8 +73,8 @@ export default new class {
   setGui() {
     this.tweaks = {
       pointSize: 1.2,
-      speed: 1,
-      curlFreq: 0.6,
+      speed: 0.1,
+      curlFreq: 0.4,
       opacity: 0.7,
       strength: 1,
     };
@@ -86,7 +86,7 @@ export default new class {
     GUI.add(this.tweaks, 'speed', 0.0, 1, 0.001)
        .onChange(() => this.simMaterial.uniforms.uSpeed.value = this.tweaks.speed);
 
-    GUI.add(this.tweaks, 'curlFreq', 0, 0.6, 0.01)
+    GUI.add(this.tweaks, 'curlFreq', 0, 2.0, 0.01)
        .name('noise frequency')
        .onChange(() => this.simMaterial.uniforms.uCurlFreq.value = this.tweaks.curlFreq);
 
@@ -99,8 +99,8 @@ export default new class {
 
   createFBO() {
     // width and height of FBO
-    const width = 512 * 2;
-    const height = 512 * 2;
+    const width = 512;
+    const height = 512;
 
     // Populate a Float32Array of random positions
     let length = width * height * 3;
@@ -161,7 +161,7 @@ export default new class {
     this.fbo = new FBO(width, height, this.renderer, this.simMaterial, this.renderMaterial);
 
     // Add the particles to the scene
-    this.fbo.particles.rotation.y = Math.PI * -0.5;
+    this.fbo.particles.rotation.y = Math.PI * -1.;
     this.scene.add(this.fbo.particles);
 
     // Stars fbo

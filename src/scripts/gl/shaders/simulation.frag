@@ -56,10 +56,10 @@ void main() {
   finalPos = mix(pos, curlPos, x);
 
   defaultPos = curl(defaultPos);
-  defaultPos.z += tan(length(defaultPos.xy) * 10.0 + t) * 1.0;
-  defaultPos += pos;
+  defaultPos.z += tan(length(defaultPos.xy) * 10.0 - t) * 1.0;
+  defaultPos += fract(pos * 4.0);
   float angle = sin(length(defaultPos) * uStrength);
-  defaultPos = rotate(defaultPos, vec3(0.0, 0.0, 1.0), angle);
+  defaultPos = rotate(defaultPos, vec3(0.5, 1.0, 1.0), angle);
   
   gl_FragColor = vec4(defaultPos, 1.0);
 }
