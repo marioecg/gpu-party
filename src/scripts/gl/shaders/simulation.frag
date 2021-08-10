@@ -44,10 +44,13 @@ void main() {
   pos = curl(pos * uCurlFreq + t);
 
   curlPos = curl(curlPos * uCurlFreq + t);
-  curlPos += curl(curlPos * uCurlFreq * 2.0 ) *  0.5;
-  curlPos += curl(curlPos * uCurlFreq * 4.0 ) *  0.25;
-  curlPos += curl(curlPos * uCurlFreq * 8.0 ) *  0.125;
-  curlPos += curl(pos * uCurlFreq * 16.0) *  0.0625;
+  // if you uncomment the next noise additions
+  // you'll get very pleasing flocking particles
+  // inside the bounds of a sphere
+  curlPos += curl(curlPos * uCurlFreq * 2.0) * 0.5;
+  curlPos += curl(curlPos * uCurlFreq * 4.0) * 0.25;
+  curlPos += curl(curlPos * uCurlFreq * 8.0) * 0.125;
+  curlPos += curl(pos * uCurlFreq * 16.0) * 0.0625;
 
   finalPos = mix(pos, curlPos, noise(pos + t));
   
