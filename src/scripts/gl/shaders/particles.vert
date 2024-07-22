@@ -1,7 +1,10 @@
 uniform sampler2D positions;
-uniform float uPointSize; 
+uniform float uPointSize;
+attribute vec3 color;
+varying vec3 vColor;
+void main() {
+  vColor = color;
 
-void main() { 
   vec3 pos = texture2D(positions, position.xy).xyz;
 
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
